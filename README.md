@@ -1,2 +1,2 @@
 # ISW-711
-Workshops
+Workshops Curso de Aplicacion Web II
