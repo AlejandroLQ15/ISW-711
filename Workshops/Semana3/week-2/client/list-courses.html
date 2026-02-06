@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Lista de cursos</title>
+</head>
+<body>
+  <h1>Lista de cursos</h1>
+
+  <button id="reload">Recargar</button>
+  <a href="./index.html">Volver</a>
+
+  <ul id="list"></ul>
+
+  <script>
+    const API_BASE = "http://localhost:3001";
+
+    async function loadCourses() {
+      const list = document.getElementById("list");
+      list.innerHTML = "<li>Cargando...</li>";
+
+      const res = await fetch(`${API_BASE}/course`);
+      const data = await res.json();
+
+      list.innerHTML = "";
+
+      if (!res.ok) {
+        list.innerHTML = `<li>❌ Error: ${JSON.stringify(data)}</li>`;
+        return;
+      }
+
+      if (data.length === 0) {
+        list.innerHTML = "<li>No hay cursos aún.</li>";
+        return;
+      }
+
+      data.forEach(c => {
+        const li = document.createElement("li");
+        li.textContent = `${c.name} (${c.credits} créditos) - id: ${c._id}`;
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById("reload").addEventListener("click", loadCourses);
+    loadCourses();
+  </script>
+</body>
+</html>
