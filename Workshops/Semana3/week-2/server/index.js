@@ -3,6 +3,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const mongoose = require('mongoose');
 const Course = require('./models/course');
+const Professor = require('./models/professor');
 
 mongoose.connect('mongodb://127.0.0.1:27017/utnapi');
 const database = mongoose.connection;
@@ -28,58 +29,145 @@ app.use(cors({
 
 
 //routes
-app.post('/course', async (req, res) => {
-    const course = new Course({
-        name: req.body.name,
-        credits: req.body.credits
-    })
 
-    try {
-        const courseCreated = await course.save();
-        //add header location to the response
-        res.header('Location', `/course?id=${courseCreated._id}`);
-        res.status(201).json(courseCreated)
-    }
-    catch (error) {
-        res.status(400).json({message: error.message})
-    }
+// ====== PROFESSOR ROUTES ======
+
+// POST - Create professor
+app.post('/professor', async (req, res) => {
+  const professor = new Professor({
+    nombre: req.body.nombre,
+    apellidos: req.body.apellidos,
+    cedula: req.body.cedula,
+    edad: req.body.edad
+  })
+
+  try {
+    const professorCreated = await professor.save();
+    res.header('Location', `/professor?id=${professorCreated._id}`);
+    res.status(201).json(professorCreated)
+  }
+  catch (error) {
+    res.status(400).json({ message: error.message })
+  }
 });
 
-app.get('/course', async (req, res) => {
-    try{
-        //if id is passed as query param, return single course else return all courses
-        if(!req.query.id){
-            const data = await Course.find();
-            return res.status(200).json(data)
-        }
-        const data = await Course.findById(req.query.id);
-        res.status(200).json(data)
+// GET - Get all professors or single professor
+app.get('/professor', async (req, res) => {
+  try {
+    if (!req.query.id) {
+      const data = await Professor.find();
+      return res.status(200).json(data)
     }
-    catch(error){
-        res.status(500).json({message: error.message})
-    }
+    const data = await Professor.findById(req.query.id);
+    res.status(200).json(data)
+  }
+  catch (error) {
+    res.status(500).json({ message: error.message })
+  }
 })
 
-// UPDATE course
-app.put('/course', async (req, res) => {
+// PUT - Update professor
+app.put('/professor', async (req, res) => {
   try {
     const id = req.query.id;
-    if (!id) return res.status(400).json({ message: "Missing id query param (?id=...)" });
+    if (!id) return res.status(400).json;
 
-    // Solo actualiza lo que venga en el body
     const update = {};
-    if (req.body.name !== undefined) update.name = req.body.name;
-    if (req.body.credits !== undefined) update.credits = req.body.credits;
+    if (req.body.nombre !== undefined) update.nombre = req.body.nombre;
+    if (req.body.apellidos !== undefined) update.apellidos = req.body.apellidos;
+    if (req.body.cedula !== undefined) update.cedula = req.body.cedula;
+    if (req.body.edad !== undefined) update.edad = req.body.edad;
 
-    const updated = await Course.findByIdAndUpdate(
+    const updated = await Professor.findByIdAndUpdate(
       id,
       update,
       { new: true, runValidators: true }
     );
 
-    if (!updated) return res.status(404).json({ message: "Course not found" });
+    if (!updated) return res.status(404).json;
 
-    // Location hacia el recurso actualizado
+    res.header('Location', `/professor?id=${updated._id}`);
+    return res.status(200).json(updated);
+
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+// DELETE - Delete professor
+app.delete('/professor', async (req, res) => {
+  try {
+    const id = req.query.id;
+    if (!id) return res.status(400).json;
+
+    const deleted = await Professor.findByIdAndDelete(id);
+
+    if (!deleted) return res.status(404).json;
+
+    return res.status(200).json;
+
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+
+// ====== COURSE ROUTES ======
+
+// POST - Create course
+app.post('/course', async (req, res) => {
+  const course = new Course({
+    nombre: req.body.nombre,
+    codigo: req.body.codigo,
+    descripcion: req.body.descripcion,
+    profesor_id: req.body.profesor_id
+  })
+
+  try {
+    const courseCreated = await course.save();
+    res.header('Location', `/course?id=${courseCreated._id}`);
+    res.status(201).json(courseCreated)
+  }
+  catch (error) {
+    res.status(400).json({ message: error.message })
+  }
+});
+
+// GET - Get all courses or single course
+app.get('/course', async (req, res) => {
+  try {
+    if (!req.query.id) {
+      const data = await Course.find().populate('profesor_id');
+      return res.status(200).json(data)
+    }
+    const data = await Course.findById(req.query.id).populate('profesor_id');
+    res.status(200).json(data)
+  }
+  catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+// PUT - Update course
+app.put('/course', async (req, res) => {
+  try {
+    const id = req.query.id;
+    if (!id) return res.status(400).json;
+
+    const update = {};
+    if (req.body.nombre !== undefined) update.nombre = req.body.nombre;
+    if (req.body.codigo !== undefined) update.codigo = req.body.codigo;
+    if (req.body.descripcion !== undefined) update.descripcion = req.body.descripcion;
+    if (req.body.profesor_id !== undefined) update.profesor_id = req.body.profesor_id;
+
+    const updated = await Course.findByIdAndUpdate(
+      id,
+      update,
+      { new: true, runValidators: true }
+    ).populate('profesor_id');
+
+    if (!updated) return res.status(404).json;
+
     res.header('Location', `/course?id=${updated._id}`);
     return res.status(200).json(updated);
 
@@ -88,17 +176,16 @@ app.put('/course', async (req, res) => {
   }
 });
 
-// DELETE course
+// DELETE - Delete course
 app.delete('/course', async (req, res) => {
   try {
     const id = req.query.id;
-    if (!id) return res.status(400).json({ message: "Missing id query param (?id=...)" });
+    if (!id) return res.status(400).json;
 
     const deleted = await Course.findByIdAndDelete(id);
 
-    if (!deleted) return res.status(404).json({ message: "Course not found" });
+    if (!deleted) return res.status(404).json;
 
-    // Puedes devolver 200 con el borrado o 204 sin contenido
     return res.status(200).json({ message: "Course deleted", deleted });
 
   } catch (error) {

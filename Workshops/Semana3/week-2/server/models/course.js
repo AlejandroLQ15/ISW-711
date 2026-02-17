@@ -1,13 +1,22 @@
 const mongoose = require('mongoose');
 
 const courseSchema = new mongoose.Schema({
-    name: {
+    nombre: {
         required: true,
         type: String
     },
-    credits: {
+    codigo: {
         required: true,
-        type: Number
+        type: String
+    },
+    descripcion: {
+        required: true,
+        type: String
+    },
+    profesor_id: {
+        required: true,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Professor'
     }
 })
 

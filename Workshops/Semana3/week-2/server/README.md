@@ -9,7 +9,7 @@
 ## Run
 
 - To execute the service run `npm start`
-
+  npm start -dev
 
 ## Test
 
