@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro - TicoAutos</title>
+  <link rel="stylesheet" href="registro.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Registro</h1>
+    <form id="registroForm">
+      <label for="nombre">Nombre</label>
+      <input type="text" id="nombre" name="nombre" required>
+
+      <label for="usuario">Usuario</label>
+      <input type="text" id="usuario" name="usuario" required>
+
+      <label for="contrasena">Contraseña</label>
+      <input type="password" id="contrasena" name="contrasena" required>
+
+      <input type="submit" value="Crear cuenta">
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('registroForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const nombre = document.getElementById('nombre').value.trim();
+      const usuario = document.getElementById('usuario').value.trim();
+      const contrasena = document.getElementById('contrasena').value;
+
+      if (!nombre || !usuario || !contrasena) {
+        alert('Por favor completa todos los campos.');
+        return;
+      }
+
+      alert('Cuenta creada para ' + nombre + ' (' + usuario + ')');
+      document.getElementById('registroForm').reset();
+    });
+  </script>
+</body>
+</html>
