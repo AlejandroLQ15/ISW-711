@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Client - Courses</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    h1 { color: #333; }
+    ul { list-style-type: none; padding: 0; }
+    li { margin: 10px 0; }
+    a {
+      display: inline-block;
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+    a:hover { background-color: #0056b3; }
+  </style>
+</head>
+<body>
+  <h1>Gestión de Cursos y Profesores</h1>
+
+  <h2>Usuarios</h2>
+  <ul>
+    <li><a href="./register.html">Registrar usuario</a></li>
+    <li><a href="./login.html">Iniciar sesión</a></li>
+  </ul>
+
+  <div id="protected-links" style="display:none;">
+    <h2>Profesores</h2>
+    <ul>
+      <li><a href="./list-professors.html">Ver profesores</a></li>
+    </ul>
+
+    <h2>Cursos</h2>
+    <ul>
+      <li><a href="./create-course.html">Crear curso</a></li>
+      <li><a href="./list-courses.html">Listar cursos</a></li>
+    </ul>
+  </div>
+
+  <script>
+    const token = sessionStorage.getItem('token');
+    if (token) {
+      document.getElementById('protected-links').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
+

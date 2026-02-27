@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Lista de Profesores</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+    h1 { color: #333; }
+    .controls {
+      margin: 20px 0;
+      display: flex;
+      gap: 10px;
+    }
+    button, a {
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: background-color 0.3s;
+    }
+    button:hover, a:hover { background-color: #0056b3; }
+    button.danger { background-color: #dc3545; }
+    button.danger:hover { background-color: #c82333; }
+    button.edit { background-color: #28a745; }
+    button.edit:hover { background-color: #218838; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+    tr:nth-child(even) { background-color: #f8f9fa; }
+    .actions {
+      display: flex;
+      gap: 5px;
+    }
+    #message {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .loading { text-align: center; font-style: italic; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>Profesores</h1>
+
+  <div class="controls">
+    <button id="createBtn">Crear Profesor</button>
+    <a href="./index.html">Volver</a>
+  </div>
+
+  <div id="message"></div>
+
+  <div id="container">
+    <p class="loading">Cargando profesores...</p>
+  </div>
+
+  <script>
+    // ensure logged in
+    if (!sessionStorage.getItem('token')) {
+      alert('Debe iniciar sesión primero');
+      window.location.href = './login.html';
+    }
+    const API_BASE = "http://localhost:3001";
+    let editingId = null;
+
+    async function loadProfessors() {
+      const container = document.getElementById("container");
+      container.innerHTML = '<p class="loading">Cargando profesores...</p>';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/professor`, {
+          headers: { "Authorization": `Bearer ${sessionStorage.getItem('token')}` }
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          container.innerHTML = `<p class="error">Error: ${data.message}</p>`;
+          return;
+        }
+
+        if (data.length === 0) {
+          container.innerHTML = "<p>No hay profesores aún.</p>";
+          return;
+        }
+
+        let html = `
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Apellidos</th>
+                <th>Cédula</th>
+                <th>Edad</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        data.forEach(p => {
+          html += `
+            <tr>
+              <td>${p.nombre}</td>
+              <td>${p.apellidos}</td>
+              <td>${p.cedula}</td>
+              <td>${p.edad}</td>
+              <td class="actions">
+                <button class="edit" onclick="editProfessor('${p._id}')">Editar</button>
+                <button class="danger" onclick="deleteProfessor('${p._id}')">Eliminar</button>
+              </td>
+            </tr>
+          `;
+        });
+
+        html += `
+            </tbody>
+          </table>
+        `;
+
+        container.innerHTML = html;
+      } catch (error) {
+        container.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+      }
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById("message");
+      msg.textContent = text;
+      msg.className = type;
+      setTimeout(() => { msg.textContent = ""; msg.className = ""; }, 3000);
+    }
+
+    function showForm() {
+      const container = document.getElementById("container");
+      const isEditing = editingId !== null;
+      const title = isEditing ? "Editar Profesor" : "Crear Profesor";
+
+      container.innerHTML = `
+        <h2>${title}</h2>
+        <form id="professorForm">
+          <div>
+            <label>Nombre:</label><br />
+            <input id="nombre" type="text" required /><br /><br />
+          </div>
+          <div>
+            <label>Apellidos:</label><br />
+            <input id="apellidos" type="text" required /><br /><br />
+          </div>
+          <div>
+            <label>Cédula:</label><br />
+            <input id="cedula" type="text" required /><br /><br />
+          </div>
+          <div>
+            <label>Edad:</label><br />
+            <input id="edad" type="number" min="18" required /><br /><br />
+          </div>
+          <button type="submit">${title}</button>
+          <button type="button" onclick="loadProfessors()">Cancelar</button>
+        </form>
+      `;
+
+      if (isEditing) {
+        fetch(`${API_BASE}/api/professor?id=${editingId}`, {
+          headers: { "Authorization": `Bearer ${sessionStorage.getItem('token')}` }
+        })
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById("nombre").value = data.nombre;
+            document.getElementById("apellidos").value = data.apellidos;
+            document.getElementById("cedula").value = data.cedula;
+            document.getElementById("edad").value = data.edad;
+          });
+      }
+
+      document.getElementById("professorForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const body = {
+          nombre: document.getElementById("nombre").value.trim(),
+          apellidos: document.getElementById("apellidos").value.trim(),
+          cedula: document.getElementById("cedula").value.trim(),
+          edad: Number(document.getElementById("edad").value)
+        };
+
+        const method = isEditing ? "PUT" : "POST";
+        const url = isEditing ? `${API_BASE}/api/professor?id=${editingId}` : `${API_BASE}/api/professor`;
+
+        try {
+          const res = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${sessionStorage.getItem('token')}` },
+            body: JSON.stringify(body)
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            showMessage(`Profesor ${isEditing ? "actualizado" : "creado"} exitosamente`, "success");
+            editingId = null;
+            setTimeout(loadProfessors, 1000);
+          } else {
+            showMessage(`Error: ${data.message}`, "error");
+          }
+        } catch (error) {
+          showMessage(`Error: ${error.message}`, "error");
+        }
+      });
+    }
+
+    function editProfessor(id) {
+      editingId = id;
+      showForm();
+    }
+
+    async function deleteProfessor(id) {
+      if (!confirm("¿Está seguro de que desea eliminar este profesor?")) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/professor?id=${id}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${sessionStorage.getItem('token')}` }
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showMessage("Profesor eliminado exitosamente", "success");
+          setTimeout(loadProfessors, 500);
+        } else {
+          showMessage(`Error: ${data.message}`, "error");
+        }
+      } catch (error) {
+        showMessage(`Error: ${error.message}`, "error");
+      }
+    }
+
+    document.getElementById("createBtn").addEventListener("click", () => {
+      editingId = null;
+      showForm();
+    });
+
+    loadProfessors();
+  </script>
+</body>
+</html>
