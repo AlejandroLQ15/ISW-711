@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>TicoAutos - Autos</title>
+  <link rel="stylesheet" href="registro.css">
+</head>
+<body>
+  <nav>
+    <a href="index.html">Inicio</a> |
+    <a href="registro.html">Registro</a> |
+    <a href="login.html">Login</a>
+  </nav>
+  <div class="container">
+    <h1>Registro de Autos</h1>
+    <form id="autoForm">
+      <label for="marca">Marca</label>
+      <input type="text" id="marca" name="marca" required>
+      <label for="modelo">Modelo</label>
+      <input type="text" id="modelo" name="modelo" required>
+      <input type="submit" value="Agregar auto">
+    </form>
+
+    <ul id="autosList"></ul>
+  </div>
+
+  <script>
+    // adjust navigation links based on authentication
+    document.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('authToken');
+      const nav = document.querySelector('nav');
+      if (token) {
+        nav.innerHTML = '<a href="index.html">Inicio</a> | <a href="#" id="logoutLink">Cerrar sesión</a>';
+        document.getElementById('logoutLink').addEventListener('click', e => {
+          e.preventDefault();
+          localStorage.removeItem('authToken');
+          window.location.reload();
+        });
+      }
+    });
+  </script>
+
+</body>
+</html>

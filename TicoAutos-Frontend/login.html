@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Iniciar sesión - TicoAutos</title>
+  <link rel="stylesheet" href="registro.css">
+  <style>
+    /* override container width for login page */
+    .container { width: 400px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Iniciar sesión</h1>
+    <form id="loginForm">
+      <label for="usuario">Usuario</label>
+      <input type="text" id="usuario" name="usuario" required>
+
+      <label for="contrasena">Contraseña</label>
+      <input type="password" id="contrasena" name="contrasena" required>
+
+      <input type="submit" value="Entrar">
+    </form>
+    <p>¿No tienes cuenta? <a href="registro.html">Regístrate</a></p>
+  </div>
+
+  <script>
+    const LOGIN_URL = 'http://localhost:3000/api/users/login';
+
+    document.getElementById('loginForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const usuario = document.getElementById('usuario').value.trim();
+      const contrasena = document.getElementById('contrasena').value;
+
+      try {
+        const resp = await fetch(LOGIN_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: usuario, password: contrasena }),
+        });
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => null);
+          throw new Error(errData?.message || 'Credenciales inválidas');
+        }
+        const data = await resp.json().catch(() => ({}));
+        localStorage.setItem('authUser', JSON.stringify(data.user || { username: usuario }));
+        alert('Inicio de sesión exitoso');
+        window.location.href = 'index.html';
+      } catch (err) {
+        console.error('Error en autenticación', err);
+        alert(err.message || 'Credenciales inválidas');
+      }
+    });
+  </script>
+</body>
+</html>
